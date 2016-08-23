@@ -8,6 +8,14 @@ With this plugin you can save added forms to your **MySQL Database**.
 ### General Settings
 Fill in the requires information in the `user/plugins/from-database/from-database.yaml` file, or use the Admin Template to make it in a GUI.
 
+```
+enabled: true
+mysql_server: localhost
+mysql_port: 3306
+mysql_username:
+mysql_password:
+```
+
 ### Individual Form Settings
 Additional to the general Settings you need following Form specific settings:
 ```
