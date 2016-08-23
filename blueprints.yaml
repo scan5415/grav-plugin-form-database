@@ -4,12 +4,12 @@ description: Save Forms in a MySQL Database
 icon: plug
 author:
   name: Andy Scherer
-  email: andy.scherer@outlook.com
-homepage: https://github.com/andy-scherer/grav-plugin-form-database
-demo: http://demo.yoursite.com
-keywords: grav, plugin, etc
-bugs: https://github.com/andy-scherer/grav-plugin-form-database/issues
-readme: https://github.com/andy-scherer/grav-plugin-form-database/blob/develop/README.md
+  email: ofee42@gmail.com
+homepage: https://github.com/scan5415/grav-plugin-form-database
+demo: http://learn.getgrav.org
+keywords: grav, plugin, form, database
+bugs: https://github.com/scan5415/grav-plugin-form-database
+readme: https://github.com/scan5415/grav-plugin-form-database/blob/develop/README.md
 license: MIT
 
 form:
