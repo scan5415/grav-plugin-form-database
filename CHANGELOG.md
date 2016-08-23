@@ -1,3 +1,10 @@
+# v1.0.1
+##  08/23/2016
+
+1. [](#fix)
+    * Github Links in blueprint.yaml
+    * E-Mail Address in blueprint.yaml
+
 # v1.0.0
 ##  08/23/2016
 
