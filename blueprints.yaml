@@ -1,0 +1,42 @@
+name: Form Database
+version: 0.1.0
+description: Save Forms in a MySQL Database
+icon: plug
+author:
+  name: Andy Scherer
+  email: andy.scherer@outlook.com
+homepage: https://github.com/andy-scherer/grav-plugin-form-database
+demo: http://demo.yoursite.com
+keywords: grav, plugin, etc
+bugs: https://github.com/andy-scherer/grav-plugin-form-database/issues
+readme: https://github.com/andy-scherer/grav-plugin-form-database/blob/develop/README.md
+license: MIT
+
+form:
+  validation: strict
+  fields:
+    enabled:
+      type: toggle
+      label: Plugin status
+      highlight: 1
+      default: 0
+      options:
+        1: Enabled
+        0: Disabled
+      validate:
+        type: bool
+    mysql_server:
+      type: text
+      label: MySQL Servername
+      help: IP or Name of MySQL Servername
+    mysql_port:
+      type: text
+      size: x-small
+      label: MySQL Server Port
+      default: '3306'
+    mysql_username:
+      type: text
+      label: MySQL Username
+    mysql_password:
+      type: password
+      label: MySQL Password
