@@ -104,9 +104,9 @@ class FormDatabasePlugin extends Plugin
 						$fieldnames = "(" . $field ."";
 						//Check if it an number value, if yes don't put in ''
 						if(in_array($fieldType,array('smallint','tinyint','mediumint','int','bigint','decimal','float','double','read','bit','boolean','serial'),true)) {
-							$fieldvalues = "(" . $_POST[$val];
+							$fieldvalues = "(" . $_POST['data'][$val];
 						} else {
-							$fieldvalues = "('" . $_POST[$val] ."'";
+							$fieldvalues = "('" . $_POST['data'][$val] ."'";
 						}
 						
 					} else {
@@ -114,9 +114,9 @@ class FormDatabasePlugin extends Plugin
 						$fieldnames .= "," . $field . "";
 						//Check if it an number value, if yes don't put in ''
 						if(in_array($fieldType,array('smallint','tinyint','mediumint','int','bigint','decimal','float','double','read','bit','boolean','serial'),true)) {
-							$fieldvalues .= "," . $_POST[$val];
+							$fieldvalues .= "," . $_POST['data'][$val];
 						} else {
-							$fieldvalues .= ",'" . $_POST[$val] ."'";
+							$fieldvalues .= ",'" . $_POST['data'][$val] ."'";
 						}
 					}
 					
