@@ -134,18 +134,18 @@ class GravFormDatabasePlugin extends Plugin {
                 $fieldnames = "(" . $field . "";
                 //Check if it an number value, if yes don't put in ''
                 if (in_array($fieldType, array('smallint', 'tinyint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double', 'read', 'bit', 'boolean', 'serial'), true)) {
-                    $fieldvalues = "(" . \mysqli_real_escape_string($dataValue);
+                    $fieldvalues = "(" . \mysqli_real_escape_string($db_con, $dataValue);
                 } else {
-                    $fieldvalues = "('" . \mysqli_real_escape_string($dataValue) . "'";
+                    $fieldvalues = "('" . \mysqli_real_escape_string($db_con, $dataValue) . "'";
                 }
             } else {
 
                 $fieldnames .= "," . $field . "";
                 //Check if it an number value, if yes don't put in ''
                 if (in_array($fieldType, array('smallint', 'tinyint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double', 'read', 'bit', 'boolean', 'serial'), true)) {
-                    $fieldvalues .= "," . \mysqli_real_escape_string($dataValue);
+                    $fieldvalues .= "," . \mysqli_real_escape_string($db_con, $dataValue);
                 } else {
-                    $fieldvalues .= ",'" . \mysqli_real_escape_string($dataValue) . "'";
+                    $fieldvalues .= ",'" . \mysqli_real_escape_string($db_con, $dataValue) . "'";
                 }
             }
         }
