@@ -1,0 +1,5 @@
+enabled: true
+mysql_server: localhost
+mysql_port: 3306
+mysql_username: bbaudry
+mysql_password: test
