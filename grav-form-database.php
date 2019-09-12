@@ -83,9 +83,6 @@ class GravFormDatabasePlugin extends Plugin {
         $vars = [
             'form' => $form
         ];
-
-        
-
         
         //Connect to DB
         $server = $this->config->get('plugins.grav-form-database.mysql_server');
