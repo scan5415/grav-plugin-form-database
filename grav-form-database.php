@@ -47,7 +47,7 @@ class GravFormDatabasePlugin extends Plugin {
      */
     public function onPageContentRaw(Event $e) {
         // Get a variable from the plugin configuration
-        $text = $this->grav['config']->get('plugins.form-database.text_var');
+        $text = $this->grav['config']->get('plugins.grav-form-database.text_var');
 
         // Get the current raw content
         $content = $e['page']->getRawContent();
@@ -88,10 +88,10 @@ class GravFormDatabasePlugin extends Plugin {
 
         
         //Connect to DB
-        $server = $this->config->get('plugins.form-database.mysql_server');
-        $port = $this->config->get('plugins.form-database.mysql_port');
-        $user = $this->config->get('plugins.form-database.mysql_username');
-        $pwd = $this->config->get('plugins.form-database.mysql_password');
+        $server = $this->config->get('plugins.grav-form-database.mysql_server');
+        $port = $this->config->get('plugins.grav-form-database.mysql_port');
+        $user = $this->config->get('plugins.grav-form-database.mysql_username');
+        $pwd = $this->config->get('plugins.grav-form-database.mysql_password');
         $db = $params['db'];
         $table = $params['table'];
         
