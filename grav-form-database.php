@@ -9,7 +9,7 @@ use RocketTheme\Toolbox\Event\Event;
  * Class FormDatabasePlugin
  * @package Grav\Plugin
  */
-class FormDatabasePlugin extends Plugin {
+class GravFormDatabasePlugin extends Plugin {
 
     /**
      * @return array
