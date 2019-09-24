@@ -1,5 +1,6 @@
 enabled: true
-mysql_server: localhost
-mysql_port: 3306
-mysql_username: bbaudry
-mysql_password: test
+engine: mysql
+server: localhost
+port: 3306
+username: bbaudry
+password: test

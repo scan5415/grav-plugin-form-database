@@ -4,6 +4,7 @@ namespace Grav\Plugin;
 
 use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
+use PDO;
 
 /**
  * Class FormDatabasePlugin
@@ -62,99 +63,86 @@ class GravFormDatabasePlugin extends Plugin {
      * @param Event $event
      */
     public function onFormProcessed(Event $event) {
-        
-        if($event['action'] !== 'database' ) return;
-         $this->grav['debugger']->addMessage('onFormProcessed - database');
-        $params =  $event['params'];
-        $data = $_POST['data'];
-        $form = $event['form'];
-        // SQL stuff
-        $fieldnames = '';
-        $fieldvalues = "";
-        $fieldResult;
-        $fieldRow;
-        $fieldType;
-        // from result
-        $dataValue;
-        $dataType; // form data type
-         
-        /** @var Twig $twig */
+        $action = $event['action'];
+        switch ($action) {
+            case 'database' :
+//                $this->grav['debugger']->addMessage('onFormProcessed - database');
+                $params = $event['params'];
+                $form = $event['form'];
+
+                $pdo = $this->prepareDB($params['db']);
+                
+                $form_fields = $this->prepareFormFields($params['table_fields'], $form);
+                $fields = array_keys($form_fields);
+                
+                $string = 'INSERT INTO ' . $params['table'] . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
+                $query = $pdo->prepare($string);
+                $this->grav['debugger']->addMessage($query);
+                $query->execute($form_fields);
+                break;
+        }
+    }
+    /**
+     * Ensure Data is ready for PDO
+     * @param type $formFields
+     * @param type $form
+     * @return type
+     */
+    private function prepareFormFields($formFields, $form) {
+        $data = $form['data'];
+        $this->grav['debugger']->addMessage($data);
         $twig = $this->grav['twig'];
         $vars = [
             'form' => $form
         ];
-        
-        //Connect to DB
-        $server = $this->config->get('plugins.grav-form-database.mysql_server');
-        $port = $this->config->get('plugins.grav-form-database.mysql_port');
-        $user = $this->config->get('plugins.grav-form-database.mysql_username');
-        $pwd = $this->config->get('plugins.grav-form-database.mysql_password');
-        $db = $params['db'];
-        $table = $params['table'];
-        
-         
-        
-        // Establish MySQL Connection
-        $db_con = \mysqli_connect($server, $user, $pwd, $db, $port);
-        if (!$db_con) {
-            throw new \RuntimeException($user . ":" . $pwd . "@" . $server . ":" . $port . "/" . $db . " | " . mysqli_connect_error());
-        }
-
-        // Create SQL Statement from field matching in the page settings
-        foreach ($params['form_fields'] as $field => $val) {
-           
-           
-            if(strrpos($val,'{{') && strrpos($val,'}}'))
-            {
-                $this->grav['debugger']->addMessage('PROCESS TWIG');
+        $fields = $formFields;
+        foreach ($fields as $field => $val) {
+            if (strrpos($val, '{{') && strrpos($val, '}}')) {
                 // Process with Twig
-                $dataValue = $twig->processString($val, $vars);
-            }
-            else{
-                 $dataValue = $data[$val];
-            }
-             $dataType = gettype($dataValue);
-            if ($dataType == 'array')
-                $dataValue = implode('|', $dataValue);
-            
-            //Check DB Field Type
-            $fieldSQL = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" . $table . "' AND column_name = '" . $field . "'";
-            if ($fieldResult = \mysqli_query($db_con, $fieldSQL)) {
-                $fieldRow = \mysqli_fetch_row($fieldResult);
-
-                $fieldType = $fieldRow[0];
+                $fields[$field] = $twig->processString($val, $vars);
             } else {
-                throw new \RuntimeException(mysqli_error($db_con));
-            }
-
-            if (strlen($fieldnames) === 0) {
-                $fieldnames = "(" . $field . "";
-                //Check if it an number value, if yes don't put in ''
-                if (in_array($fieldType, array('smallint', 'tinyint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double', 'read', 'bit', 'boolean', 'serial'), true)) {
-                    $fieldvalues = "(" . \mysqli_real_escape_string($db_con, $dataValue);
-                } else {
-                    $fieldvalues = "('" . \mysqli_real_escape_string($db_con, $dataValue) . "'";
-                }
-            } else {
-
-                $fieldnames .= "," . $field . "";
-                //Check if it an number value, if yes don't put in ''
-                if (in_array($fieldType, array('smallint', 'tinyint', 'mediumint', 'int', 'bigint', 'decimal', 'float', 'double', 'read', 'bit', 'boolean', 'serial'), true)) {
-                    $fieldvalues .= "," . \mysqli_real_escape_string($db_con, $dataValue);
-                } else {
-                    $fieldvalues .= ",'" . \mysqli_real_escape_string($db_con, $dataValue) . "'";
-                }
+                $dataValue = $data[$val];
+                if (gettype($dataValue) == 'array')
+                    $dataValue = implode('|', $dataValue); //if form result = array expl. checkboxes or multiple selection 
+                $fields[$field] = $dataValue;
             }
         }
-        $fieldnames .= ")";
-        $fieldvalues .= ")";
-        $sql = "INSERT INTO " . $table . " " . $fieldnames . " VALUES " . $fieldvalues;
-        $this->grav['debugger']->addMessage($sql);
-        if(!(\mysqli_query($db_con,$sql))) {
-                throw new \RuntimeException(mysqli_error($db_con));
-        }
+        return $fields;
+    }
 
-        mysqli_close($db_con);
+    private function prepareDB($db) {
+        $engine = $this->config->get('plugins.grav-form-database.engine');
+        $dsn = $engine . ':';
+        $user = '';
+        $pwd = '';
+
+        switch ($engine) {
+            case 'mysql':
+                $dsn .= 'host=' . $this->config->get('plugins.grav-form-database.server');
+                $dsn .= ';dbname=' . $db;
+                $dsn .= ';port=' . $this->config->get('plugins.grav-form-database.port');
+                $user = $this->config->get('plugins.grav-form-database.username');
+                $pwd = $this->config->get('plugins.grav-form-database.password');
+                break;
+            case 'pgsql':
+                $dsn .= 'host=' . $this->config->get('plugins.grav-form-database.server');
+                $dsn .= ' dbname=' . $db;
+                $dsn .= ' port=' . $this->config->get('plugins.grav-form-database.port');
+                $dsn .= ' user=' . $this->config->get('plugins.grav-form-database.username');
+                $dsn .= ' password=' . $this->config->get('plugins.grav-form-database.password');
+                break;
+            case 'sqlite':
+                $dsn .= $this->config->get('plugins.grav-form-database.server');
+                break;
+        }
+        //$this->grav['debugger']->addMessage($dsn);
+        try {
+            $pdo = new \PDO($dsn, $user, $pwd);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (Exception $e) {
+            throw new \RuntimeException($user . ":" . $pwd . " | " . $dsn . " | " . $e->getMessage());
+        }
+        return $pdo;
     }
 
 }
