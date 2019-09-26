@@ -66,7 +66,7 @@ class GravFormDatabasePlugin extends Plugin {
         $action = $event['action'];
         switch ($action) {
             case 'database' :
-//                $this->grav['debugger']->addMessage('onFormProcessed - database');
+                $this->grav['debugger']->addMessage('onFormProcessed - database');
                 $params = $event['params'];
                 $form = $event['form'];
 
@@ -77,7 +77,8 @@ class GravFormDatabasePlugin extends Plugin {
                 
                 $string = 'INSERT INTO ' . $params['table'] . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
                 $query = $pdo->prepare($string);
-                $this->grav['debugger']->addMessage($query);
+//                $this->grav['debugger']->addMessage($query);
+//                $this->grav['debugger']->addMessage($form_fields);
                 $query->execute($form_fields);
                 break;
         }
@@ -97,15 +98,21 @@ class GravFormDatabasePlugin extends Plugin {
         ];
         $fields = $formFields;
         foreach ($fields as $field => $val) {
-            if (strrpos($val, '{{') && strrpos($val, '}}')) {
+            $dataValue = $data[$val];
+           
+            if (strrpos($val, '{{')>=0 && strrpos($val, '}}')>0) {
                 // Process with Twig
-                $fields[$field] = $twig->processString($val, $vars);
-            } else {
-                $dataValue = $data[$val];
-                if (gettype($dataValue) == 'array')
-                    $dataValue = implode('|', $dataValue); //if form result = array expl. checkboxes or multiple selection 
-                $fields[$field] = $dataValue;
+                $dataValue = $twig->processString($val, $vars);
+            } else if(is_null($dataValue)){
+                // if value hard coded
+                $dataValue = $val;
             }
+            if (gettype($dataValue) == 'array')
+            {
+                //stringify array
+                $dataValue = implode('|', $dataValue); //if form result = array expl. checkboxes or multiple selection 
+            }
+            $fields[$field] = $dataValue;
         }
         return $fields;
     }
