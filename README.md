@@ -27,7 +27,7 @@ username:
 password: 
 # or mysql_password: (v1.0.1)
 
-# additional params since 2.0
+#################### additional params since 2.0 ##################################
 engine: mysql 
 # Available engines are mysql, pgsql and sqlite. default is mysql for backwards compatibility.
 
