@@ -1,16 +1,22 @@
 <?php
+
 namespace Grav\Plugin;
 
 use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
+use PDO;
+use Grav;
 
 /**
  * Class FormDatabasePlugin
  * @package Grav\Plugin
  */
-class FormDatabasePlugin extends Plugin
-{
-	
+class GravFormDatabasePlugin extends Plugin {
+    protected $db;
+    protected $table;
+    protected $config;
+    protected $pname;//plugin's name
+
     /**
      * @return array
      *
@@ -21,8 +27,7 @@ class FormDatabasePlugin extends Plugin
      *     callable (or function) as well as the priority. The
      *     higher the number the higher the priority.
      */
-    public static function getSubscribedEvents()
-    {
+    public static function getSubscribedEvents() {
         return [
             'onPluginsInitialized' => ['onPluginsInitialized', 0],
             'onFormProcessed' => ['onFormProcessed', 0]
@@ -32,105 +37,136 @@ class FormDatabasePlugin extends Plugin
     /**
      * Initialize the plugin
      */
-    public function onPluginsInitialized()
-    {
-		
+    public function onPluginsInitialized() {
+
         // Don't proceed if we are in the admin plugin
+        $this->pname = 'grav-form-database';
         if ($this->isAdmin()) {
             return;
         }
-
     }
+
 
     /**
-     * Do some work for this event, full details of events can be found
-     * on the learn site: http://learn.getgrav.org/plugins/event-hooks
-     *
-     * @param Event $e
-     */
-    public function onPageContentRaw(Event $e)
-    {
-        // Get a variable from the plugin configuration
-        $text = $this->grav['config']->get('plugins.form-database.text_var');
-
-        // Get the current raw content
-        $content = $e['page']->getRawContent();
-
-        // Prepend the output with the custom text and set back on the page
-        $e['page']->setRawContent($text . "\n\n" . $content);
-    }
-	
-	/**
      * Save Data in Database when processing the form
      *
      * @param Event $event
      */
-    public function onFormProcessed(Event $event)
-    {
-        $form = $event['form'];
+    public function onFormProcessed(Event $event) {
         $action = $event['action'];
-        $params = $event['params'];
-		
-		switch($action) {
-			case 'database':
+        switch ($action) {
+            case 'database' :
+                $this->grav['debugger']->addMessage('onFormProcessed - database');
 
-				//Connect to DB
-				$server = $this->config->get('plugins.form-database.mysql_server');
-				$port = $this->config->get('plugins.form-database.mysql_port');
-				$user = $this->config->get('plugins.form-database.mysql_username');
-				$pwd = $this->config->get('plugins.form-database.mysql_password');
-				$db = $params['db'];
-				$table = $params['table'];
-				
-				// Establish MySQL Connection
-				$db_con = \mysqli_connect($server,$user,$pwd,$db,$port);
-				if(!$db_con) {
-					throw new \RuntimeException($user .":" . $pwd ."@" . $server .":" . $port ."/" . $db . " | " . mysqli_connect_error());
-				}
-				
-				// Create SQL Statement from field matching in the page settings
-				foreach($params['fields'] as $field => $val) {
-					//Check DB Field Type
-					$fieldSQL = "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '" . $table . "' AND column_name = '" . $field . "'";
-					if($fieldResult = \mysqli_query($db_con,$fieldSQL)) {
-						$fieldRow = \mysqli_fetch_row($fieldResult);
-						
-						$fieldType = $fieldRow[0];
-					} else {
-						throw new \RuntimeException(mysqli_error($db_con));
-					}
-					
-					if(strlen($fieldnames) === 0) {
-						$fieldnames = "(" . $field ."";
-						//Check if it an number value, if yes don't put in ''
-						if(in_array($fieldType,array('smallint','tinyint','mediumint','int','bigint','decimal','float','double','read','bit','boolean','serial'),true)) {
-							$fieldvalues = "(" . $_POST[$val];
-						} else {
-							$fieldvalues = "('" . $_POST[$val] ."'";
-						}
-						
-					} else {
-						
-						$fieldnames .= "," . $field . "";
-						//Check if it an number value, if yes don't put in ''
-						if(in_array($fieldType,array('smallint','tinyint','mediumint','int','bigint','decimal','float','double','read','bit','boolean','serial'),true)) {
-							$fieldvalues .= "," . $_POST[$val];
-						} else {
-							$fieldvalues .= ",'" . $_POST[$val] ."'";
-						}
-					}
-					
-				}
-				$fieldnames .= ")";
-				$fieldvalues .= ")";
-				$sql = "INSERT INTO " . $table . " " . $fieldnames ." VALUES " . $fieldvalues;
+                $params = $event['params'];
+                $form = $event['form'];
 
-				if(!(\mysqli_query($db_con,$sql))) {
-					throw new \RuntimeException(mysqli_error($db_con));
-				}
-				
-				mysqli_close($db_con);
-			break;
-		}
-	}
+                $this->prepareDB($params);
+                
+                $form_fields = $this->prepareFormFields($params['fields'], $form);
+                $fields = array_keys($form_fields);
+                
+                $string = 'INSERT INTO ' . $this->table . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
+
+                $this->db->insert($string, $form_fields);
+
+                break;
+        }
+    }
+    /**
+     * Ensure Data is ready for PDO
+     * @param type $formFields
+     * @param type $form
+     * @return type
+     */
+    private function prepareFormFields($formFields, $form) {
+        $data = $form['data'];
+        $this->grav['debugger']->addMessage($data);
+        $twig = $this->grav['twig'];
+        $vars = [
+            'form' => $form
+        ];
+        $fields = $formFields;
+        $separator = $this->config->get('plugins.'.$this->pname.'.array_separator')??';';//backwards compatible
+        foreach ($fields as $field => $val) {
+            $dataValue = $data[$val];
+           
+            if (strrpos($val, '{{')>=0 && strrpos($val, '}}')>0) {
+                // Process with Twig
+                $dataValue = $twig->processString($val, $vars);
+            } else if(is_null($dataValue)){
+                // if value hard coded
+                $dataValue = $val;
+            }
+            if (gettype($dataValue) == 'array')
+            {
+                //stringify array
+                $dataValue = implode($separator, $dataValue); //if form result = array expl. checkboxes or multiple selection 
+            }
+            $fields[$field] = $dataValue;
+        }
+        return $fields;
+    }
+
+    private function prepareDB($params) {
+       
+        //if db not passed with the form
+        $db_namne = $params['db']?? $this->config->get('plugins.'.$this->pname.'.db');
+        if($db_name=='')
+        {
+             throw new \RuntimeException( "NO db SET. Set it in {$this->pname}.yaml of in your form's yaml");
+        }
+        $this->table = $params['table']?? $this->config->get('plugins.'.$this->pname.'.table');
+        if ($table == '') {
+             throw new \RuntimeException( "NO table SET. Set it in  {$this->pname}.yaml of in your form's yaml");
+        }
+        
+        // backwards compatible config
+        $engine = $this->config->get('plugins.'.$this->pname.'.engine')??'mysql';
+        $user = $this->config->get('plugins.'.$this->pname.'.username')??$this->config->get('plugins.'.$this->pname.'.mysql_username')??'';
+        $pwd = $this->config->get('plugins.'.$this->pname.'.password')??$this->config->get('plugins.'.$this->pname.'.mysql_password')??'';
+        $server = $this->config->get('plugins.'.$this->pname.'.server')??$this->config->get('plugins.'.$this->pname.'.mysql_server')??'';
+        $port = $this->config->get('plugins.'.$this->pname.'.port')??$this->config->get('plugins.'.$this->pname.'.mysql_port')??'';
+        //
+        $dsn = $engine . ':';
+        switch ($engine) {
+            case 'mysql':
+                $dsn .= 'host=' . $server;
+                $dsn .= ';dbname=' . $db_name;
+                $dsn .= ';port=' .$port;
+                $user = $user;
+                $pwd = $pwd;
+                break;
+            case 'pgsql':
+                $dsn .= 'host=' . $server;
+                $dsn .= ' dbname=' . $db_name;
+                $dsn .= ' port=' . $port;
+                $dsn .= ' user=' . $user;
+                $dsn .= ' password=' . $pwd;
+                $user = '';
+                $pwd = '';
+                break;
+            case 'sqlite':
+                $dsn .= $server;
+                $dsn .= '/';
+                $dsn .= $db_name;
+                break;
+            default:
+                $dsn .= 'host=' . $server;
+                $dsn .= ';dbname=' . $db_name;
+                $dsn .= ';port=' .$port;
+                $user = $user;
+                $pwd = $pwd;
+                break;
+                
+        }
+
+        try {
+            
+            $this->db = $this->grav['database']->connect( $dsn, $user, $pwd, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION] );
+        } catch (Exception $e) {
+            throw new \RuntimeException($user . ":" . $pwd . " | " . $dsn . " | " . $e->getMessage());
+        }
+        return $this->db;
+    }
 }
