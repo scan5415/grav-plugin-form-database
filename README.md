@@ -70,10 +70,14 @@ fields:
             database:
                 db: myCompany 
                 table: surveys
-                fields: 
-                    e-mail: email # using form's filed named 'e-mail'
-                    phone-fixnet: phone # using form's filed named 'phone-fixnet'
-                    stored: "{{now|date('HisDdMy') }}" # using twig
+                fields:
+                        # using form's filed named 'e-mail'
+                    e-mail: email
+                        # using form's filed named 'phone-fixnet'
+                    phone-fixnet: phone 
+                        # using twig
+                    stored: "{{now|date('HisDdMy') }}"
+                        # using hardcoded constant
                     form_id: "form_01" # using hardcoded constant
                     
 ```
