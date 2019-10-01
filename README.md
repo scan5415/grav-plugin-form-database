@@ -4,7 +4,8 @@ The **Form Database** Plugin is for [Grav CMS](http://github.com/getgrav/grav).
 - extends to the [Form-Plugin](https://github.com/getgrav/grav-plugin-form)
 - makes use of the [Database plugin](https://github.com/getgrav/grav-plugin-database) (based on PDO)
 - saves forms results to your **MySQL, Postgre or SQLite** Databases.
-_Other [PDO compatible DB](https://www.php.net/manual/fr/pdo.drivers.php) should work from scratch or be fairly easy to add _
+
+*Other [PDO compatible DB](https://www.php.net/manual/fr/pdo.drivers.php) should work from scratch or be fairly easy to add*
 
 ## Configuration
 
