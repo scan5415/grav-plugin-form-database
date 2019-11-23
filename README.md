@@ -83,5 +83,5 @@ fields:
 ```
 ## Changes
 this repo is the new master for this plugin
-original repo from scan5415 
+original repo from Andy Scherer (scan5415) 
 https://github.com/scan5415/grav-plugin-form-database
