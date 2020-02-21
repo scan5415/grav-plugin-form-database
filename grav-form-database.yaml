@@ -2,5 +2,6 @@ enabled: true
 engine: mysql
 server: localhost
 port: 3306
-username: bbaudry
+username: jdoe
 password: test
+array_separator: ";"

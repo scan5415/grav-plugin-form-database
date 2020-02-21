@@ -5,12 +5,17 @@ namespace Grav\Plugin;
 use Grav\Common\Plugin;
 use RocketTheme\Toolbox\Event\Event;
 use PDO;
+use Grav;
 
 /**
  * Class FormDatabasePlugin
  * @package Grav\Plugin
  */
 class GravFormDatabasePlugin extends Plugin {
+    protected $db;
+    protected $table;
+    protected $config;
+    protected $pname;//plugin's name
 
     /**
      * @return array
@@ -35,27 +40,12 @@ class GravFormDatabasePlugin extends Plugin {
     public function onPluginsInitialized() {
 
         // Don't proceed if we are in the admin plugin
+        $this->pname = 'grav-form-database';
         if ($this->isAdmin()) {
             return;
         }
     }
 
-    /**
-     * Do some work for this event, full details of events can be found
-     * on the learn site: http://learn.getgrav.org/plugins/event-hooks
-     *
-     * @param Event $e
-     */
-    public function onPageContentRaw(Event $e) {
-        // Get a variable from the plugin configuration
-        $text = $this->grav['config']->get('plugins.grav-form-database.text_var');
-
-        // Get the current raw content
-        $content = $e['page']->getRawContent();
-
-        // Prepend the output with the custom text and set back on the page
-        $e['page']->setRawContent($text . "\n\n" . $content);
-    }
 
     /**
      * Save Data in Database when processing the form
@@ -67,19 +57,19 @@ class GravFormDatabasePlugin extends Plugin {
         switch ($action) {
             case 'database' :
                 $this->grav['debugger']->addMessage('onFormProcessed - database');
+
                 $params = $event['params'];
                 $form = $event['form'];
 
-                $pdo = $this->prepareDB($params['db']);
+                $this->prepareDB($params);
                 
-                $form_fields = $this->prepareFormFields($params['table_fields'], $form);
+                $form_fields = $this->prepareFormFields($params['fields'], $form);
                 $fields = array_keys($form_fields);
                 
-                $string = 'INSERT INTO ' . $params['table'] . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
-                $query = $pdo->prepare($string);
-//                $this->grav['debugger']->addMessage($query);
-//                $this->grav['debugger']->addMessage($form_fields);
-                $query->execute($form_fields);
+                $string = 'INSERT INTO ' . $this->table . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
+
+                $this->db->insert($string, $form_fields);
+
                 break;
         }
     }
@@ -97,6 +87,7 @@ class GravFormDatabasePlugin extends Plugin {
             'form' => $form
         ];
         $fields = $formFields;
+        $separator = $this->config->get('plugins.'.$this->pname.'.array_separator')??';';//backwards compatible
         foreach ($fields as $field => $val) {
             $dataValue = $data[$val];
            
@@ -110,46 +101,74 @@ class GravFormDatabasePlugin extends Plugin {
             if (gettype($dataValue) == 'array')
             {
                 //stringify array
-                $dataValue = implode('|', $dataValue); //if form result = array expl. checkboxes or multiple selection 
+                $dataValue = implode($separator, $dataValue); //if form result = array expl. checkboxes or multiple selection 
             }
             $fields[$field] = $dataValue;
         }
         return $fields;
     }
 
-    private function prepareDB($db) {
-        $engine = $this->config->get('plugins.grav-form-database.engine');
+    private function prepareDB($params) {
+       
+        //if db not passed with the form
+        $db_namne = $params['db']?? $this->config->get('plugins.'.$this->pname.'.db');
+        if($db_name=='')
+        {
+             throw new \RuntimeException( "NO db SET. Set it in {$this->pname}.yaml of in your form's yaml");
+        }
+        $this->table = $params['table']?? $this->config->get('plugins.'.$this->pname.'.table');
+        if ($table == '') {
+             throw new \RuntimeException( "NO table SET. Set it in  {$this->pname}.yaml of in your form's yaml");
+        }
+        
+        // backwards compatible config
+        $engine = $this->config->get('plugins.'.$this->pname.'.engine')??'mysql';
+        $user = $this->config->get('plugins.'.$this->pname.'.username')??$this->config->get('plugins.'.$this->pname.'.mysql_username')??'';
+        $pwd = $this->config->get('plugins.'.$this->pname.'.password')??$this->config->get('plugins.'.$this->pname.'.mysql_password')??'';
+        $server = $this->config->get('plugins.'.$this->pname.'.server')??$this->config->get('plugins.'.$this->pname.'.mysql_server')??'';
+        $port = $this->config->get('plugins.'.$this->pname.'.port')??$this->config->get('plugins.'.$this->pname.'.mysql_port')??'';
+        //
         $dsn = $engine . ':';
-        $user = '';
-        $pwd = '';
-
         switch ($engine) {
             case 'mysql':
-                $dsn .= 'host=' . $this->config->get('plugins.grav-form-database.server');
-                $dsn .= ';dbname=' . $db;
-                $dsn .= ';port=' . $this->config->get('plugins.grav-form-database.port');
-                $user = $this->config->get('plugins.grav-form-database.username');
-                $pwd = $this->config->get('plugins.grav-form-database.password');
+                $dsn .= 'host=' . $server;
+                $dsn .= ';dbname=' . $db_name;
+                $dsn .= ';port=' .$port;
+                $user = $user;
+                $pwd = $pwd;
                 break;
             case 'pgsql':
-                $dsn .= 'host=' . $this->config->get('plugins.grav-form-database.server');
-                $dsn .= ' dbname=' . $db;
-                $dsn .= ' port=' . $this->config->get('plugins.grav-form-database.port');
-                $dsn .= ' user=' . $this->config->get('plugins.grav-form-database.username');
-                $dsn .= ' password=' . $this->config->get('plugins.grav-form-database.password');
+                $dsn .= 'host=' . $server;
+                $dsn .= ' dbname=' . $db_name;
+                $dsn .= ' port=' . $port;
+                $dsn .= ' user=' . $user;
+                $dsn .= ' password=' . $pwd;
+                $user = '';
+                $pwd = '';
                 break;
             case 'sqlite':
-                $dsn .= $this->config->get('plugins.grav-form-database.server');
+                $dsn .= $server;
+                $dsn .= '/';
+                $dsn .= $db_name;
                 break;
+            default:
+                $dsn .= 'host=' . $server;
+                $dsn .= ';dbname=' . $db_name;
+                $dsn .= ';port=' .$port;
+                $user = $user;
+                $pwd = $pwd;
+                break;
+                
         }
         //$this->grav['debugger']->addMessage($dsn);
         try {
-            $pdo = new \PDO($dsn, $user, $pwd);
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+//            $pdo = new \PDO($dsn, $user, $pwd);
+            $this->db = $this->grav['database']->connect( $dsn, $user, $pwd, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION] );
+            //$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
             throw new \RuntimeException($user . ":" . $pwd . " | " . $dsn . " | " . $e->getMessage());
         }
-        return $pdo;
+        return $this->db;
     }
-
 }

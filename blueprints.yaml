@@ -1,5 +1,5 @@
 name: Form Database
-version: 1.0.0
+version: 2.0.0
 description: Save Forms in a MySQL Database
 icon: plug
 author:
@@ -11,6 +11,10 @@ keywords: grav, plugin, form, database
 bugs: https://github.com/scan5415/grav-plugin-form-database
 readme: https://github.com/scan5415/grav-plugin-form-database/blob/develop/README.md
 license: MIT
+dependencies:
+  - { name: grav, version: '>=1.6.0' }
+  - { name: database, version: '>=1.0.0' }
+  - { name: form, version: '>=2.0.0' }
 
 form:
   validation: strict
@@ -25,18 +29,53 @@ form:
         0: Disabled
       validate:
         type: bool
-    mysql_server:
+    engine:
+      type: radio
+      label: DB Engine
+      default: sqlite
+      options:
+          sqlite: SQLite
+          mysql: MySQL
+          pgsql: Postgre
+      validate.required: true
+    server:
       type: text
-      label: MySQL Servername
-      help: IP or Name of MySQL Servername
-    mysql_port:
+      label: Servername or path
+      help: IP or Name of DB Servername or path to the SQLite db
+      validate.required: true
+      size: medium
+    port:
       type: text
       size: x-small
-      label: MySQL Server Port
+      label: Server Port (MySQL or PG)
       default: '3306'
-    mysql_username:
+    username:
       type: text
-      label: MySQL Username
-    mysql_password:
+      label: Username (required for MySQL or PG)
+      size: medium
+      help: Username (required for MySQL or PG)
+    password:
       type: password
-      label: MySQL Password
+      label: Password (required for MySQL or PG)
+      size: medium
+      help: Password (required for MySQL or PG)
+    db: 
+      type: text
+      size: small      
+      label: Database name
+      help: If not set here, don't forget to set it in your form's action otherwise an exception will be thrown
+    table:
+      type: text
+      label: Table name
+      size: small     
+      help: If not set here, don't forget to set it in your form's action otherwise an exception will be thrown
+    array_separator: 
+      default: ';'
+      type: text
+      label: "Separator to join results in a string (expl: for checkboxes)"
+      size: x-small
+      validate:
+          pattern: "\\W"
+          max: 1
+          min: 1
+      
