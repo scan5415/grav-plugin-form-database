@@ -111,7 +111,7 @@ class GravFormDatabasePlugin extends Plugin {
     private function prepareDB($params) {
        
         //if db not passed with the form
-        $db_namne = $params['db']?? $this->config->get('plugins.'.$this->pname.'.db');
+        $db_name = $params['db']?? $this->config->get('plugins.'.$this->pname.'.db');
         if($db_name=='')
         {
              throw new \RuntimeException( "NO db SET. Set it in {$this->pname}.yaml of in your form's yaml");
