@@ -63,7 +63,7 @@ class GravFormDatabasePlugin extends Plugin {
 
                 $this->prepareDB($params);
                 
-                $form_fields = $this->prepareFormFields($params['table_fields'], $form);
+                $form_fields = $this->prepareFormFields($params['table_fields']?? $params['fields'], $form);
                 $fields = array_keys($form_fields);
                 
                 $string = 'INSERT INTO ' . $this->table . ' ('. implode(', ', $fields).') VALUES (:'. implode(', :', $fields). ')';
@@ -160,9 +160,7 @@ class GravFormDatabasePlugin extends Plugin {
                 break;
                 
         }
-
         try {
-            
             $this->db = $this->grav['database']->connect( $dsn, $user, $pwd, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION] );
         } catch (Exception $e) {
             throw new \RuntimeException($user . ":" . $pwd . " | " . $dsn . " | " . $e->getMessage());
