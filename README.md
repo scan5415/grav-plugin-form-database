@@ -32,25 +32,28 @@ engine: mysql
 # Available engines are mysql, pgsql and sqlite. default is mysql for backwards compatibility.
 
 db: <<Your DB Name>> 
-# set the database gloabaly and override it in the forms if needed
+# set the database globally and override it in the forms if needed
 
 table: <<Table Name>> 
-# set the table gloabaly and override it in the forms if needed 
+# set the table globally and override it in the forms if needed 
 
 array_separator: | 
-# Separator character to strore array based form results (like checkboxes). default is ";".
+# Separator character to store array based form results (like checkboxes) as concatenated string with seperator. default is ";".
 ```
 
 ### Individual Form Settings
 Additional to the general Settings you need following Form specific settings:
 ```
-# can be set globaly
+# can be set globally 
 db: <<Your DB Name>>
 
-# can be set globaly
+# can be set globally
 table: <<Table Name>>
 
-fields: 
+# for each of your table fields, set the value from the form fields
+# You can use twig to do some computation on the form field value
+# you can also set a constant
+table_fields: 
     <<DB_Field1>>: <<Form_Field1|twig_string|hard_coded_data>>
     <<DB_Field2>>: <<Form_Field1|twig_string|hard_coded_data>>
     
