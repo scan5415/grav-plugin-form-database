@@ -56,7 +56,7 @@ class FormDatabasePlugin extends Plugin {
         $action = $event['action'];
         switch ($action) {
             case 'database' :
-                $this->grav['debugger']->addMessage('onFormProcessed - database');
+                //$this->grav['debugger']->addMessage('onFormProcessed - database');
 
                 $params = $event['params'];
                 $form = $event['form'];
@@ -81,7 +81,7 @@ class FormDatabasePlugin extends Plugin {
      */
     private function prepareFormFields($formFields, $form) {
         $data = $form['data'];
-        $this->grav['debugger']->addMessage($data);
+        //$this->grav['debugger']->addMessage($data);
         $twig = $this->grav['twig'];
         $vars = [
             'form' => $form
