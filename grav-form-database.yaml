@@ -1,7 +1,0 @@
-enabled: true
-engine: mysql
-server: localhost
-port: 3306
-username: jdoe
-password: test
-array_separator: ";"

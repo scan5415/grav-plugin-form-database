@@ -3,6 +3,7 @@ version: 2.0.0
 description: Save Forms in a MySQL Database
 icon: plug
 author:
+<<<<<<< HEAD
   name: Andy Scherer
   email: ofee42@gmail.com
 homepage: https://github.com/scan5415/grav-plugin-form-database
@@ -10,6 +11,15 @@ demo: http://learn.getgrav.org
 keywords: grav, plugin, form, database
 bugs: https://github.com/scan5415/grav-plugin-form-database
 readme: https://github.com/scan5415/grav-plugin-form-database/blob/develop/README.md
+=======
+  name: Bruno Baudry
+  email: gamahachaa@gmail.com
+homepage: https://github.com/gamahachaa/grav-plugin-form-database
+demo: http://learn.getgrav.org
+keywords: grav, plugin, form, database
+bugs: https://github.com/gamahachaa/grav-plugin-form-database
+readme: https://github.com/gamahachaa/grav-plugin-form-database/blob/develop/README.md
+>>>>>>> e5771f3c523f54a4a82fd2a0b57eee2e62bdfaac
 license: MIT
 dependencies:
   - { name: grav, version: '>=1.6.0' }
@@ -78,4 +88,7 @@ form:
           pattern: "\\W"
           max: 1
           min: 1
+<<<<<<< HEAD
       
+=======
+>>>>>>> e5771f3c523f54a4a82fd2a0b57eee2e62bdfaac
