@@ -117,7 +117,7 @@ class GravFormDatabasePlugin extends Plugin {
              throw new \RuntimeException( "NO db SET. Set it in {$this->pname}.yaml of in your form's yaml");
         }
         $this->table = $params['table']?? $this->config->get('plugins.'.$this->pname.'.table');
-        if ($table == '') {
+        if ($this->table == '') {
              throw new \RuntimeException( "NO table SET. Set it in  {$this->pname}.yaml of in your form's yaml");
         }
         
