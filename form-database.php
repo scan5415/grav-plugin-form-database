@@ -11,7 +11,7 @@ use Grav;
  * Class FormDatabasePlugin
  * @package Grav\Plugin
  */
-class GravFormDatabasePlugin extends Plugin {
+class FormDatabasePlugin extends Plugin {
     protected $db;
     protected $table;
     protected $config;
