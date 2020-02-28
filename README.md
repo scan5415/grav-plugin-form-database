@@ -70,7 +70,7 @@ fields:
             database:
                 db: myCompany 
                 table: surveys
-                fields:
+                table_fields:
                         # using form's filed named 'e-mail'
                     e-mail: email
                         # using form's filed named 'phone-fixnet'
