@@ -40,7 +40,7 @@ class GravFormDatabasePlugin extends Plugin {
     public function onPluginsInitialized() {
 
         // Don't proceed if we are in the admin plugin
-        $this->pname = 'grav-form-database';
+        $this->pname = 'form-database';
         if ($this->isAdmin()) {
             return;
         }
